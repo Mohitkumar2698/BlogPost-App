@@ -1,16 +1,17 @@
 import React, { useContext, useState } from "react";
-import { UserContext } from "../context/UserState.jsx";
+import { UserContext } from "../../context/UserState.jsx";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import validator from "validator";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    role: "",
     password: "",
   });
-
   const navigate = useNavigate();
   const { registerUser } = useContext(UserContext);
 
@@ -21,12 +22,24 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validator.isEmail(formData.email)) {
+      toast.error("Enter a valid email");
+      return;
+    }
+
     const res = await registerUser(formData);
 
     if (res.success) {
       toast.success("Registration successful!");
-      localStorage.setItem("username", formData.username);
-      setTimeout(() => navigate("/"), 1000);
+      console.log(res);
+
+      localStorage.setItem("username", res.user.username);
+      localStorage.setItem("role", res.user.role); // optional persistence
+
+      if (res.user.role === "admin")
+        setTimeout(() => navigate(`/admin/${res.user._id}`), 1000);
+      else setTimeout(() => navigate(`/`), 1000);
     } else {
       toast.error(res.message || "Registration failed");
     }
@@ -41,9 +54,24 @@ const Register = () => {
         <h2 className="text-3xl font-bold text-center mb-6 underline underline-offset-8">
           Sign Up
         </h2>
-
-        <div className="mb-4">
-          <label htmlFor="username" className="block mb-1 text-sm">
+        <div className="mb-2">
+          <label htmlFor="email" className="block text-sm">
+            Role
+          </label>
+          <select
+            id="role"
+            name="role"
+            required
+            onChange={handleChange}
+            className="w-full h-10 px-2 bg-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-black/80"
+          >
+            <option value="">Register as</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div className="mb-2">
+          <label htmlFor="username" className="block text-sm">
             Username
           </label>
           <input
@@ -57,9 +85,8 @@ const Register = () => {
             className="w-full h-10 px-3 border border-black/80 bg-transparent rounded focus:outline-none focus:ring-2 focus:ring-teal-300"
           />
         </div>
-
-        <div className="mb-4">
-          <label htmlFor="email" className="block mb-1 text-sm">
+        <div className="mb-2">
+          <label htmlFor="email" className="block text-sm">
             Email
           </label>
           <input
@@ -75,7 +102,7 @@ const Register = () => {
         </div>
 
         <div className="mb-6">
-          <label htmlFor="password" className="block mb-1 text-sm">
+          <label htmlFor="password" className="block text-sm">
             Password
           </label>
           <input

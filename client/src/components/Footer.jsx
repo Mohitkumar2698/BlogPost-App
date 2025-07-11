@@ -3,7 +3,7 @@ import { FaGithub, FaLinkedin, FaEnvelope } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-black/90 text-white py-6 px-4">
+    <footer className="bg-black/90 text-white py-6 px-10">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-sm text-white/70">
           &copy; {new Date().getFullYear()} YourBlogApp. All rights reserved.

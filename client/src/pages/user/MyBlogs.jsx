@@ -3,8 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { FaEdit, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
-import { BlogContext } from "../context/BlogState";
-import api from "../utils/api";
+import { BlogContext } from "../../context/BlogState";
+import api from "../../utils/api";
 
 const MyBlog = () => {
   const { username } = useParams();

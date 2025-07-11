@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { FaArrowLeft, FaSpinner } from "react-icons/fa";
-import { BlogContext } from "../context/BlogState";
+import { BlogContext } from "../../context/BlogState";
 
 const Blog = () => {
   const { id } = useParams();

@@ -1,11 +1,11 @@
 import React, { useContext, useState } from "react";
-import { UserContext } from "../context/UserState";
+import { UserContext } from "../../context/UserState";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
-  const { loginUser, setIsLoggedIn } = useContext(UserContext);
+  const { loginUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -22,9 +22,15 @@ const Login = () => {
     e.preventDefault();
     const res = await loginUser(formData);
     if (res.success) {
+      console.log(res);
+
       toast.success("Login successful!");
-      localStorage.setItem("username", formData.username); // optional persistence
-      setTimeout(() => navigate("/"), 1000);
+      localStorage.setItem("username", res.user.username); // optional persistence
+      localStorage.setItem("role", res.user.role); // optional persistence
+
+      if (res.user.role === "admin")
+        setTimeout(() => navigate(`/admin/${res.user._id}`), 1000);
+      else setTimeout(() => navigate(`/`), 1000);
     } else {
       toast.error(res.message || "Login failed!");
     }

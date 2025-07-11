@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { UserContext } from "../context/UserState";
+import { UserContext } from "../../context/UserState";
 import { FaSpinner } from "react-icons/fa";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -94,6 +94,22 @@ const Profile = () => {
               <input
                 readOnly
                 value={user.email}
+                className="text-black ml-2 pl-4 bg-gray-300 rounded text-[0.9rem] p-1 placeholder:black/50"
+              ></input>{" "}
+            </p>
+            <p className="font-semibold flex text-teal-700">
+              Blogs:
+              <input
+                readOnly
+                value={user.blogs}
+                className="text-black ml-2 pl-4 bg-gray-300 rounded text-[0.9rem] p-1 placeholder:black/50"
+              ></input>{" "}
+            </p>
+            <p className="font-semibold flex text-teal-700">
+              Role:
+              <input
+                readOnly
+                value={user.role}
                 className="text-black ml-2 pl-4 bg-gray-300 rounded text-[0.9rem] p-1 placeholder:black/50"
               ></input>{" "}
             </p>

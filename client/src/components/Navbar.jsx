@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaBlog, FaPlus, FaSignOutAlt, FaUser } from "react-icons/fa";
 
@@ -6,6 +6,7 @@ const Navbar = () => {
   const [clicked, setClicked] = useState(false);
   const username = localStorage.getItem("username");
   const profilePic = localStorage.getItem("profilePic");
+  const role = localStorage.getItem("role");
   const navigate = useNavigate();
 
   const signOut = () => {
@@ -14,6 +15,9 @@ const Navbar = () => {
       navigate("/");
     }, 1000);
   };
+  useEffect(() => {
+    console.log(username);
+  }, [username]);
 
   return (
     <nav className="h-20 bg-teal-700 text-white px-10 flex justify-between items-center shadow-md sticky top-0 z-50">
@@ -54,7 +58,9 @@ const Navbar = () => {
           <>
             <Link
               to="/post"
-              className="px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-100 shadow-md hover:text-black/80 hover:shadow-black/50 transition duration-200"
+              className={`${
+                role ? "hidden" : "block"
+              } px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-100 shadow-md hover:text-black/80 hover:shadow-black/50 transition duration-200`}
             >
               <FaPlus />
               Post
@@ -93,13 +99,14 @@ const Navbar = () => {
                   </Link>
                   <Link
                     to={`${username}`}
-                    className="flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white"
+                    className={`${
+                      role ? "hidden" : "block"
+                    } flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white`}
                   >
                     <FaBlog className="mr-2" /> My Blogs
                   </Link>
                   <div
                     onClick={signOut}
-                    to="/"
                     className="flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white cursor-pointer"
                   >
                     <FaSignOutAlt className="mr-2" /> Sign Out

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { BlogContext } from "../context/BlogState";
+import { BlogContext } from "../../context/BlogState";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 
