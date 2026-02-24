@@ -1,11 +1,19 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { FaEdit, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
+import { FaEdit, FaSpinner, FaTrash } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
 import { BlogContext } from "../../context/BlogState";
 import api from "../../utils/api";
-import Login from "../user/Login";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import Badge from "../../components/ui/badge";
+import Alert from "../../components/ui/alert";
 
 const Dashboard = () => {
   const { id } = useParams();
@@ -13,29 +21,16 @@ const Dashboard = () => {
   const [blogs, setBlogs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState();
-  const [getData, setGetData] = useState("blogs");
   const username = localStorage.getItem("username");
   const navigate = useNavigate();
-
-  const fetchBlogs = async () => {
-    try {
-      const res = await getRequest(`admin/blogs/${id}`);
-      console.log(res.blogs);
-      setBlogs(res.blogs);
-    } catch (err) {
-      setError("Failed to load blog. It might not exist.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const deleteBlog = async (id) => {
     try {
       const res = await api.delete(`http://localhost:4000/api/v1/${id}`);
       toast.success(res.data.message);
       navigate(0);
-    } catch (err) {
-      toast.error(err);
+    } catch {
+      toast.error("Unable to delete blog.");
     } finally {
       setLoading(false);
     }
@@ -43,20 +38,35 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!username) setError("Unauthorized - Please");
-    else fetchBlogs();
-  }, []);
+    else {
+      const fetchBlogs = async () => {
+        try {
+          const res = await getRequest(`admin/blogs/${id}`);
+          setBlogs(res.blogs);
+        } catch {
+          setError("Failed to load blog. It might not exist.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchBlogs();
+    }
+  }, [username, getRequest, id]);
 
   return (
     <>
       {!username ? (
         <div className="flex justify-center items-center min-h-125 bg-gray-100">
-          <p className=" text-red-500 text-2xl">
-            {error}{" "}
-            <Link className="text-teal-700 underline" to={"/login"}>
-              Login
-            </Link>{" "}
-            first
-          </p>
+          <div className="w-full max-w-xl px-4">
+            <Alert variant="error" title="Unauthorized">
+              {error}{" "}
+              <Link className="text-teal-700 underline" to={"/login"}>
+                Login
+              </Link>{" "}
+              first.
+            </Alert>
+          </div>
         </div>
       ) : loading ? (
         <div className="flex justify-center items-center min-h-125 bg-gray-100">
@@ -76,47 +86,51 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold text-slate-800">
               Welcome Admin <span className="text-teal-700">{username}</span>
             </h1>
-            <p className="text-[0.9rem">
+            <p className="text-sm text-slate-600">
               Here you can control every user and blogs
             </p>
           </div>
           {blogs.map((blog, idx) => (
-            <div className="w-160  bg-white p-6 rounded shadow-md" key={idx}>
-              <div className="mb-4 justify-between flex items-center">
-                <h1 className="text-3xl font-bold mb-2 text-slate-800">
-                  {blog.title}
-                </h1>
-                <div className="flex gap-4 text-xl text-teal-700">
-                  <span
-                    className="cursor-pointer"
-                    onClick={() => {
-                      navigate(`/edit/${blog._id}`);
-                    }}
-                  >
-                    <FaEdit />
-                  </span>
-                  <span
-                    className="cursor-pointer text-red-500"
-                    onClick={() => {
-                      deleteBlog(blog._id);
-                    }}
-                  >
-                    <FaTrash />
-                  </span>
+            <Card className="w-full lg:w-[48%]" key={idx}>
+              <CardHeader>
+                <div className="mb-2 justify-between flex items-center">
+                  <CardTitle className="text-3xl">{blog.title}</CardTitle>
+                  <div className="flex gap-4 text-xl text-teal-700">
+                    <button
+                      className="cursor-pointer"
+                      onClick={() => {
+                        navigate(`/edit/${blog._id}`);
+                      }}
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      className="cursor-pointer text-red-500"
+                      onClick={() => {
+                        deleteBlog(blog._id);
+                      }}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm text-gray-500 mb-4">
-                Posted on {new Date(blog.createdAt).toDateString()}
-              </p>
-              <p className="text-gray-800 mb-6 border p-3 rounded bg-gray-50">
-                {blog.content}
-              </p>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 mb-4">
+                  Posted on {new Date(blog.createdAt).toDateString()}
+                </p>
+                <p className="text-gray-800 mb-6 border p-3 rounded bg-gray-50">
+                  {blog.content}
+                </p>
+              </CardContent>
 
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Category: {blog.category.toUpperCase()}</span>
+              <CardFooter className="flex justify-between text-sm text-gray-600">
+                <span>
+                  Category: <Badge>{blog.category.toUpperCase()}</Badge>
+                </span>
                 <span>Author: {blog.author.toUpperCase()}</span>
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           ))}
           <ToastContainer position="top-left" autoClose={3000} />
         </div>

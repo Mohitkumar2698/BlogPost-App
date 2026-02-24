@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext } from "react";
 import axios from "axios";
 import api from "../utils/api";
 axios.defaults.withCredentials = true;

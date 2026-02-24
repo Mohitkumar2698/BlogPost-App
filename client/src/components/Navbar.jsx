@@ -1,6 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaBlog, FaPlus, FaSignOutAlt, FaUser } from "react-icons/fa";
+import React, { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { FaBlog, FaHeart, FaPlus, FaSignOutAlt, FaUser } from "react-icons/fa";
+import useFavoriteBlogs from "../hooks/useFavoriteBlogs";
+import Badge from "./ui/badge";
 
 const Navbar = () => {
   const [clicked, setClicked] = useState(false);
@@ -8,59 +10,59 @@ const Navbar = () => {
   const profilePic = localStorage.getItem("profilePic");
   const role = localStorage.getItem("role");
   const navigate = useNavigate();
+  const { totalFavorites } = useFavoriteBlogs();
 
   const signOut = () => {
     localStorage.clear();
-    setTimeout(() => {
-      navigate("/");
-    }, 1000);
+    navigate("/");
   };
-  useEffect(() => {
-    console.log(username);
-  }, [username]);
+
+  const linkClass = ({ isActive }) =>
+    `px-3 py-2 rounded-md transition ${isActive ? "bg-white text-teal-800" : "hover:bg-teal-600"}`;
 
   return (
-    <nav className="h-20 bg-teal-700 text-white px-10 flex justify-between items-center shadow-md sticky top-0 z-50">
-      <div className="text-3xl font-semibold tracking-wide cursor-pointer">
+    <nav className="sticky top-0 z-50 bg-teal-700 text-white px-4 md:px-8 h-20 flex justify-between items-center shadow-md">
+      <div className="text-2xl md:text-3xl font-semibold tracking-wide cursor-pointer">
         <Link
           to="/"
-          className="text-shadow-teal-200 text-shadow-lg transition duration-200 underline underline-offset-5 decoration-4"
+          className="transition hover:opacity-90"
         >
-          <span className="overline">BlogStory</span>
+          <span>BlogStory</span>
         </Link>
-      </div>
-      <div className="lg:w-200 px-4">
-        {/* <input
-          type="text"
-          placeholder="Search by here"
-          className="w-full h-10 px-4 rounded bg-gray-100 text-black placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-200"
-        /> */}
       </div>
 
       {/* Right section */}
-      <div className="flex items-center gap-7 relative">
+      <div className="flex items-center gap-2 md:gap-4 relative">
+        <NavLink
+          to="/favorites"
+          className={linkClass}
+        >
+          <FaHeart className="inline mr-1" />
+          <span className="hidden sm:inline">Saved</span>
+          <Badge className="ml-1">{totalFavorites}</Badge>
+        </NavLink>
         {!username ? (
           <>
-            <Link
+            <NavLink
               to="/login"
-              className="px-4 py-2 border rounded hover:text-black/80 hover:bg-gray-100 hover:shadow-black/50 shadow-lg transition"
+              className={linkClass}
             >
               Sign In
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               to="/register"
-              className="px-4 py-2 border rounded hover:text-black/80 hover:bg-gray-100 hover:shadow-black/50 shadow-lg transition"
+              className={linkClass}
             >
               Sign Up
-            </Link>
+            </NavLink>
           </>
         ) : (
           <>
             <Link
               to="/post"
               className={`${
-                role ? "hidden" : "block"
-              } px-4 py-2 border rounded flex items-center gap-2 hover:bg-gray-100 shadow-md hover:text-black/80 hover:shadow-black/50 transition duration-200`}
+                role ? "hidden" : "hidden md:inline-flex"
+              } px-3 py-2 rounded-md items-center gap-2 hover:bg-teal-600 transition`}
             >
               <FaPlus />
               Post
@@ -89,8 +91,8 @@ const Navbar = () => {
               </div>
 
               {/* Dropdown menu */}
-              {clicked && (
-                <div className="absolute right-0 mt-2 w-44 bg-white text-black border border-white/20 rounded-md shadow-lg py-2 text-smz-50">
+                {clicked && (
+                <div className="absolute right-0 mt-2 w-44 bg-white text-black border border-slate-200 rounded-md shadow-lg py-2 z-50">
                   <Link
                     to="/profile"
                     className="flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white"
@@ -98,19 +100,19 @@ const Navbar = () => {
                     <FaUser className="mr-2" /> Profile
                   </Link>
                   <Link
-                    to={`${username}`}
+                    to={`/u/${username}`}
                     className={`${
                       role ? "hidden" : "block"
                     } flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white`}
                   >
                     <FaBlog className="mr-2" /> My Blogs
                   </Link>
-                  <div
+                  <button
                     onClick={signOut}
-                    className="flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white cursor-pointer"
+                    className="w-full text-left flex items-center px-4 py-2 hover:bg-teal-700 transition hover:text-white cursor-pointer"
                   >
                     <FaSignOutAlt className="mr-2" /> Sign Out
-                  </div>
+                  </button>
                 </div>
               )}
             </div>

@@ -13,6 +13,7 @@ import MyBlog from "./pages/user/MyBlogs";
 import Edit from "./pages/user/Edit";
 import SignUp from "./pages/user/SignUp";
 import Dashboard from "./pages/admin/Dashboard";
+import Favorites from "./pages/user/Favorites";
 
 const App = () => {
   return (
@@ -27,6 +28,8 @@ const App = () => {
         <Route path="/post" element={<Post />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/blogs/:id" element={<Blog />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/u/:username" element={<MyBlog />} />
         <Route path="/:id" element={<MyBlog />} />
         <Route path="/edit/:id" element={<Edit />} />
         <Route path="*" element={<Error />} />

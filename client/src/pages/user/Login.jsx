@@ -3,10 +3,14 @@ import { UserContext } from "../../context/UserState";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import Input from "../../components/ui/input";
+import Button from "../../components/ui/button";
 
 const Login = () => {
   const { loginUser } = useContext(UserContext);
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -20,13 +24,12 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     const res = await loginUser(formData);
     if (res.success) {
-      console.log(res);
-
       toast.success("Login successful!");
-      localStorage.setItem("username", res.user.username); // optional persistence
-      localStorage.setItem("role", res.user.role); // optional persistence
+      localStorage.setItem("username", res.user.username);
+      localStorage.setItem("role", res.user.role);
 
       if (res.user.role === "admin")
         setTimeout(() => navigate(`/admin/${res.user._id}`), 1000);
@@ -34,57 +37,53 @@ const Login = () => {
     } else {
       toast.error(res.message || "Login failed!");
     }
+    setSubmitting(false);
   };
 
   return (
-    <div className="min-h-125 bg-gray-100 flex justify-center items-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white text-black p-8 rounded-lg shadow-lg w-full max-w-sm"
-      >
-        <h1 className="text-3xl text-center font-bold mb-6 underline underline-offset-8">
-          Log In
-        </h1>
+    <div className="min-h-125 bg-gray-100 flex justify-center items-center px-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-3xl text-center">Log In</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block mb-1 text-sm text-slate-700">
+                Username
+              </label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="Enter your username"
+              />
+            </div>
 
-        <div className="mb-4">
-          <label htmlFor="username" className="block mb-1 text-sm">
-            Username
-          </label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            value={formData.username}
-            onChange={handleChange}
-            required
-            className="w-full h-10 px-3 border rounded bg-inherit border-black/80  focus:outline-none focus:ring-2 focus:ring-teal-300"
-            placeholder="Enter your username"
-          />
-        </div>
+            <div>
+              <label htmlFor="password" className="block mb-1 text-sm text-slate-700">
+                Password
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter your password"
+              />
+            </div>
 
-        <div className="mb-6">
-          <label htmlFor="password" className="block mb-1 text-sm">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full h-10 px-3 border rounded bg-inherit border-black/80  focus:outline-none focus:ring-2 focus:ring-teal-300"
-            placeholder="Enter your password"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-teal-700 hover:shadow-lg shadow-black/80 text-white py-2 rounded font-semibold transition duration-200 cursor-pointer"
-        >
-          Submit
-        </button>
-      </form>
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <ToastContainer position="top-right" autoClose={3000} />
     </div>

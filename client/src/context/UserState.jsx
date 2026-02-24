@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext } from "react";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 import api from "../utils/api.js";
@@ -12,7 +12,6 @@ const UserState = (props) => {
       const apiData = await api.post(`/register`, data);
       return apiData.data;
     } catch (error) {
-      console.log(error.response.data.message);
       return error.response.data;
     }
   }

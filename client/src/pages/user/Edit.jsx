@@ -1,16 +1,25 @@
-import { useContext, useState } from "react";
-import { FaFont, FaPager, FaTag, FaUser } from "react-icons/fa";
+import { useContext, useEffect, useState } from "react";
+import { FaFont, FaPager, FaSpinner, FaTag, FaUser } from "react-icons/fa";
 import { BlogContext } from "../../context/BlogState";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import Input from "../../components/ui/input";
+import Textarea from "../../components/ui/textarea";
+import Button from "../../components/ui/button";
+import Badge from "../../components/ui/badge";
+import Alert from "../../components/ui/alert";
 
 const Edit = () => {
-  const { editBlog } = useContext(BlogContext);
+  const { editBlog, getRequest } = useContext(BlogContext);
   const username = localStorage.getItem("username");
   const { id } = useParams();
 
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -23,8 +32,32 @@ const Edit = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const res = await getRequest(`blogs/${id}`);
+        if (!res?.blog) {
+          setError("Blog not found.");
+          return;
+        }
+        setFormData({
+          title: res.blog.title || "",
+          content: res.blog.content || "",
+          category: res.blog.category || "",
+        });
+      } catch {
+        setError("Unable to load blog details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlog();
+  }, [id, getRequest]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       const res = await editBlog(id, {
         ...formData,
@@ -33,13 +66,14 @@ const Edit = () => {
 
       if (res.success) {
         toast.success("Blog edited successfully!");
-        navigate(`/:${username}`);
+        navigate(`/u/${username}`);
       } else {
         toast.error(res.message || "Failed to edit blog.");
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred while posting.");
     }
+    setSubmitting(false);
   };
 
   return (
@@ -53,97 +87,103 @@ const Edit = () => {
           </Link>{" "}
           first.
         </p>
+      ) : loading ? (
+        <div className="flex justify-center items-center min-h-125 bg-gray-100">
+          <FaSpinner className="animate-spin text-5xl text-teal-700" />
+        </div>
+      ) : error ? (
+        <div className="w-full max-w-xl px-4">
+          <Alert variant="error" title="Unable to edit">
+            {error}
+          </Alert>
+        </div>
       ) : (
         <>
-          {/* Form */}
-          <div className="bg-white rounded-lg p-6 w-full max-w-6xl shadow-xl flex flex-col lg:flex-row gap-6">
+          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6">
             <form
               onSubmit={handleSubmit}
-              className="flex flex-col gap-4 w-full lg:w-1/2 border border-black/30 rounded p-5"
+              className="flex flex-col gap-4"
             >
-              <h2 className="text-3xl text-center font-semibold">Edit Blog</h2>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl text-center">Edit Blog</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <label className="flex items-center gap-2">
+                    <FaFont />
+                    <Input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="Title"
+                    />
+                  </label>
 
-              <label className="flex items-center gap-2">
-                <FaFont />
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Title"
-                  className="w-full px-3 py-2 bg-transparent rounded border border-black/30 focus:outline-none"
-                />
-              </label>
+                  <label className="flex items-center gap-2">
+                    <FaUser />
+                    <Input type="text" value={username} readOnly />
+                  </label>
 
-              <label className="flex items-center gap-2">
-                <FaUser />
-                <input
-                  type="text"
-                  value={username}
-                  readOnly
-                  className="w-full px-3 py-2 bg-transparent rounded border border-black/30"
-                />
-              </label>
+                  <label className="flex items-center gap-2">
+                    <FaTag />
+                    <Input
+                      type="text"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      placeholder="Category"
+                    />
+                  </label>
 
-              <label className="flex items-center gap-2">
-                <FaTag />
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  placeholder="Category"
-                  className="w-full px-3 py-2 bg-transparent rounded border-black/30 focus:outline-none border"
-                />
-              </label>
+                  <label className="flex gap-2">
+                    <FaPager className="mt-1" />
+                    <Textarea
+                      name="content"
+                      value={formData.content}
+                      onChange={handleChange}
+                      placeholder="Write your content here..."
+                      className="h-40 resize-none"
+                    />
+                  </label>
 
-              <label className="flex gap-2">
-                <FaPager className="mt-1" />
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  placeholder="Write your content here..."
-                  className="w-full h-40 resize-none p-3 bg-transparent border border-black/30 rounded focus:outline-none"
-                />
-              </label>
-
-              <div className="flex gap-4 mt-3">
-                <button
-                  type="submit"
-                  className="w-full bg-teal-700 text-white font-semibold cursor-pointer py-2 rounded hover:shadow-md shadow-black transition"
-                >
-                  Update
-                </button>
-                <button
-                  type="reset"
-                  onClick={() =>
-                    setFormData({ title: "", content: "", category: "" })
-                  }
-                  className="w-full bg-white/10 border font-semibold cursor-pointer py-2 rounded hover:shadow-black shadow-md transition"
-                >
-                  Reset
-                </button>
-              </div>
+                  <div className="flex gap-3 mt-3">
+                    <Button type="submit" className="w-full" disabled={submitting}>
+                      {submitting ? "Updating..." : "Update Blog"}
+                    </Button>
+                    <Button
+                      type="reset"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setFormData({ title: "", content: "", category: "" })}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </form>
 
-            {/* Preview */}
-            <div className="w-full lg:w-1/2 border border-black/30 rounded p-5 flex flex-col gap-4 bg-teal-700">
-              <div className="flex justify-between text-sm text-white/80">
-                <span>{formData.title || "Title"}</span>
-                <span>{new Date().toDateString()}</span>
-              </div>
-              <textarea
-                readOnly
-                value={formData.content}
-                placeholder="Content preview..."
-                className="bg-white text-black p-3 rounded h-40 resize-none"
-              />
-              <div className="flex justify-between text-white/50 text-sm">
-                <span>{formData.category?.toUpperCase() || "CATEGORY"}</span>
-                <span>- {username?.toUpperCase()}</span>
-              </div>
-            </div>
+            <Card className="bg-teal-700 border-teal-700 text-white">
+              <CardHeader>
+                <div className="flex justify-between text-sm text-white/80">
+                  <span>{formData.title || "Title"}</span>
+                  <span>{new Date().toDateString()}</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  readOnly
+                  value={formData.content}
+                  placeholder="Content preview..."
+                  className="bg-white text-black h-40 resize-none"
+                />
+                <div className="flex justify-between text-white/80 text-sm mt-4">
+                  <Badge variant="secondary">{formData.category?.toUpperCase() || "CATEGORY"}</Badge>
+                  <span>- {username?.toUpperCase()}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </>
       )}
@@ -154,3 +194,4 @@ const Edit = () => {
 };
 
 export default Edit;
+
