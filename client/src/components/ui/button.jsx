@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 
 const variants = {
   default: "bg-teal-700 text-white hover:bg-teal-800",
-  outline: "border border-slate-300 text-slate-900 hover:bg-slate-100",
-  ghost: "text-slate-700 hover:bg-slate-100",
+  outline: "border border-slate-300 text-slate-900 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800",
+  ghost: "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800",
   destructive: "bg-rose-600 text-white hover:bg-rose-700",
-  secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300",
+  secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600",
   link: "text-teal-700 underline-offset-4 hover:underline",
 };
 

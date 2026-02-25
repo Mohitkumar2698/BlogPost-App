@@ -1,19 +1,17 @@
 import React, { useContext, useState } from "react";
 import { UserContext } from "../../context/UserState.jsx";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { alertError, alertSuccess } from "../../utils/alerts";
 import validator from "validator";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import Select from "../../components/ui/select";
 import Input from "../../components/ui/input";
 import Button from "../../components/ui/button";
+import { saveSession } from "../../utils/session";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    role: "",
     password: "",
   });
   const navigate = useNavigate();
@@ -30,7 +28,7 @@ const Register = () => {
     setSubmitting(true);
 
     if (!validator.isEmail(formData.email)) {
-      toast.error("Enter a valid email");
+      alertError("Enter a valid email");
       setSubmitting(false);
       return;
     }
@@ -38,37 +36,26 @@ const Register = () => {
     const res = await registerUser(formData);
 
     if (res.success) {
-      toast.success("Registration successful!");
-      localStorage.setItem("username", res.user.username);
-      localStorage.setItem("role", res.user.role); // optional persistence
+      alertSuccess("Registration successful!");
+      saveSession({ user: res.user, token: res.token });
 
       if (res.user.role === "admin")
         setTimeout(() => navigate(`/admin/${res.user._id}`), 1000);
       else setTimeout(() => navigate(`/`), 1000);
     } else {
-      toast.error(res.message || "Registration failed");
+      alertError(res.message || "Registration failed");
     }
     setSubmitting(false);
   };
 
   return (
-    <div className="min-h-125 bg-gray-100 flex items-center justify-center px-4">
+    <div className="min-h-[80vh] bg-gradient-to-b from-cyan-50 via-white to-emerald-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-3xl text-center">Sign Up</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label htmlFor="role" className="block text-sm mb-1 text-slate-700">
-                Role
-              </label>
-              <Select id="role" name="role" required onChange={handleChange}>
-                <option value="">Register as</option>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </Select>
-            </div>
             <div>
               <label htmlFor="username" className="block text-sm mb-1 text-slate-700">
                 Username
@@ -118,11 +105,9 @@ const Register = () => {
             </Button>
           </form>
         </CardContent>
-      </Card>
-
-      <ToastContainer position="top-right" autoClose={3000} />
-    </div>
+      </Card>    </div>
   );
 };
 
 export default Register;
+

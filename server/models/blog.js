@@ -22,6 +22,20 @@ const BlogsSchema = new Schema({
     type: String,
     required: true,
   },
+  imageUrl: {
+    type: String,
+    default: "",
+  },
+  likedBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  commentsCount: {
+    type: Number,
+    default: 0,
+  },
   createdAt: { type: Date, default: Date.now() },
 });
 

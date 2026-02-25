@@ -1,15 +1,14 @@
 import { useContext, useEffect, useState } from "react";
-import { FaFont, FaPager, FaSpinner, FaTag, FaUser } from "react-icons/fa";
+import { FaFont, FaImage, FaPager, FaSpinner, FaTag, FaUser } from "react-icons/fa";
 import { BlogContext } from "../../context/BlogState";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import Input from "../../components/ui/input";
 import Textarea from "../../components/ui/textarea";
 import Button from "../../components/ui/button";
 import Badge from "../../components/ui/badge";
 import Alert from "../../components/ui/alert";
+import { alertError, alertSuccess } from "../../utils/alerts";
 
 const Edit = () => {
   const { editBlog, getRequest } = useContext(BlogContext);
@@ -20,36 +19,48 @@ const Edit = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     category: "",
+    coverImage: null,
+    existingImage: "",
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
+    if (name === "coverImage") {
+      const file = files?.[0] || null;
+      setFormData((prev) => ({ ...prev, coverImage: file }));
+      if (file) {
+        const objectUrl = URL.createObjectURL(file);
+        setPreviewUrl(objectUrl);
+      }
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   useEffect(() => {
     const fetchBlog = async () => {
-      try {
-        const res = await getRequest(`blogs/${id}`);
-        if (!res?.blog) {
-          setError("Blog not found.");
-          return;
-        }
-        setFormData({
-          title: res.blog.title || "",
-          content: res.blog.content || "",
-          category: res.blog.category || "",
-        });
-      } catch {
-        setError("Unable to load blog details.");
-      } finally {
+      const res = await getRequest(`blogs/${id}`);
+      if (!res?.success || !res?.blog) {
+        setError(res?.message || "Unable to load blog details.");
         setLoading(false);
+        return;
       }
+
+      setFormData({
+        title: res.blog.title || "",
+        content: res.blog.content || "",
+        category: res.blog.category || "",
+        coverImage: null,
+        existingImage: res.blog.imageUrl || "",
+      });
+      setPreviewUrl(res.blog.imageUrl || "");
+      setLoading(false);
     };
 
     fetchBlog();
@@ -60,24 +71,26 @@ const Edit = () => {
     setSubmitting(true);
     try {
       const res = await editBlog(id, {
-        ...formData,
-        author: username,
+        title: formData.title,
+        content: formData.content,
+        category: formData.category,
+        coverImage: formData.coverImage,
       });
 
       if (res.success) {
-        toast.success("Blog edited successfully!");
+        alertSuccess("Blog edited successfully!");
         navigate(`/u/${username}`);
       } else {
-        toast.error(res.message || "Failed to edit blog.");
+        alertError(res.message || "Failed to edit blog.");
       }
     } catch {
-      toast.error("An error occurred while posting.");
+      alertError("An error occurred while posting.");
     }
     setSubmitting(false);
   };
 
   return (
-    <div className="flex justify-center items-center min-h-125 p-2 bg-gray-100">
+    <div className="min-h-[80vh] p-4 bg-gradient-to-b from-slate-50 via-white to-cyan-50">
       {!username ? (
         <p className="text-2xl text-red-500">
           Oops! You aren't logged in. Please
@@ -88,7 +101,7 @@ const Edit = () => {
           first.
         </p>
       ) : loading ? (
-        <div className="flex justify-center items-center min-h-125 bg-gray-100">
+        <div className="flex justify-center items-center min-h-[80vh] bg-transparent">
           <FaSpinner className="animate-spin text-5xl text-teal-700" />
         </div>
       ) : error ? (
@@ -98,15 +111,19 @@ const Edit = () => {
           </Alert>
         </div>
       ) : (
-        <>
-          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-4xl font-black tracking-tight">Edit Story</h1>
+            <p className="text-slate-600 mt-1">Update your content, category, and cover image.</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <form
               onSubmit={handleSubmit}
               className="flex flex-col gap-4"
             >
-              <Card>
+              <Card className="border-slate-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-2xl text-center">Edit Blog</CardTitle>
+                  <CardTitle className="text-2xl">Story Editor</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <label className="flex items-center gap-2">
@@ -136,6 +153,16 @@ const Edit = () => {
                     />
                   </label>
 
+                  <label className="flex items-center gap-2">
+                    <FaImage />
+                    <Input
+                      type="file"
+                      name="coverImage"
+                      accept="image/*"
+                      onChange={handleChange}
+                    />
+                  </label>
+
                   <label className="flex gap-2">
                     <FaPager className="mt-1" />
                     <Textarea
@@ -155,7 +182,15 @@ const Edit = () => {
                       type="reset"
                       variant="outline"
                       className="w-full"
-                      onClick={() => setFormData({ title: "", content: "", category: "" })}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          title: "",
+                          content: "",
+                          category: "",
+                          coverImage: null,
+                        }))
+                      }
                     >
                       Reset
                     </Button>
@@ -164,7 +199,7 @@ const Edit = () => {
               </Card>
             </form>
 
-            <Card className="bg-teal-700 border-teal-700 text-white">
+            <Card className="bg-gradient-to-br from-slate-900 to-slate-700 border-0 text-white">
               <CardHeader>
                 <div className="flex justify-between text-sm text-white/80">
                   <span>{formData.title || "Title"}</span>
@@ -172,6 +207,9 @@ const Edit = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="w-full h-40 object-cover rounded mb-3" />
+                ) : null}
                 <Textarea
                   readOnly
                   value={formData.content}
@@ -185,10 +223,8 @@ const Edit = () => {
               </CardContent>
             </Card>
           </div>
-        </>
+        </div>
       )}
-
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

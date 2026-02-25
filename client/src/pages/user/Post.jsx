@@ -1,28 +1,40 @@
-import { useContext, useState } from "react";
-import { FaFont, FaPager, FaTag, FaUser } from "react-icons/fa";
+import { useContext, useEffect, useState } from "react";
+import { FaFont, FaImage, FaPager, FaTag, FaUser } from "react-icons/fa";
 import { BlogContext } from "../../context/BlogState";
 import { Link } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { alertError, alertSuccess } from "../../utils/alerts";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import Input from "../../components/ui/input";
 import Textarea from "../../components/ui/textarea";
 import Button from "../../components/ui/button";
 import Badge from "../../components/ui/badge";
+import Alert from "../../components/ui/alert";
+import { getSession } from "../../utils/session";
 
 const Post = () => {
   const { postBlog } = useContext(BlogContext);
-  const username = localStorage.getItem("username");
+  const { username, isLoggedIn, isUser } = getSession();
   const [submitting, setSubmitting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     category: "",
+    coverImage: null,
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
+    if (name === "coverImage") {
+      setFormData((prev) => ({ ...prev, coverImage: files?.[0] || null }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -31,43 +43,61 @@ const Post = () => {
     setSubmitting(true);
     try {
       const res = await postBlog({
-        ...formData,
-        author: username,
+        title: formData.title,
+        content: formData.content,
+        category: formData.category,
+        coverImage: formData.coverImage,
       });
 
       if (res.success) {
-        toast.success("Blog posted successfully!");
-        setFormData({ title: "", content: "", category: "" });
+        alertSuccess("Blog posted successfully!");
+        setFormData({ title: "", content: "", category: "", coverImage: null });
       } else {
-        toast.error(res.message || "Failed to post blog.");
+        alertError(res.message || "Failed to post blog.");
       }
     } catch {
-      toast.error("An error occurred while posting.");
+      alertError("An error occurred while posting.");
     }
     setSubmitting(false);
   };
 
+  useEffect(() => {
+    if (!formData.coverImage) {
+      setPreviewUrl("");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(formData.coverImage);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [formData.coverImage]);
+
   return (
-    <div className="flex justify-center items-center min-h-125 p-2 bg-gray-100">
-      {!username ? (
-        <p className="text-2xl text-red-500">
-          Oops! You aren't logged in. Please
-          <Link to="/login" className=" text-blue-600 underline">
-            {" "}
-            Log in
-          </Link>{" "}
-          first.
-        </p>
+    <div className="min-h-[80vh] p-4 bg-gradient-to-b from-slate-50 via-white to-cyan-50">
+      {!isLoggedIn || !username || !isUser ? (
+        <div className="mx-auto mt-16 max-w-2xl">
+          <Alert variant="error" title="Access restricted">
+            {!isLoggedIn ? (
+              <>
+                Please <Link to="/login" className="text-blue-600 underline">log in</Link> with a user account
+                to publish posts.
+              </>
+            ) : (
+              "This action is available for user accounts only."
+            )}
+          </Alert>
+        </div>
       ) : (
-        <>
-          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-4"
-            >
-              <Card>
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-4xl font-black tracking-tight">Write a Story</h1>
+            <p className="text-slate-600 mt-1">Share your thoughts with cover image and detailed content.</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <Card className="border-slate-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-2xl text-center">Post New Blog</CardTitle>
+                  <CardTitle className="text-2xl">New Story</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <label className="flex items-center gap-2">
@@ -99,6 +129,17 @@ const Post = () => {
                     />
                   </label>
 
+                  <label className="flex items-center gap-2">
+                    <FaImage />
+                    <Input
+                      type="file"
+                      name="coverImage"
+                      accept="image/*"
+                      onChange={handleChange}
+                      required
+                    />
+                  </label>
+
                   <label className="flex gap-2">
                     <FaPager className="mt-1" />
                     <Textarea
@@ -112,14 +153,20 @@ const Post = () => {
                   </label>
 
                   <div className="flex gap-3 mt-3">
-                    <Button type="submit" className="w-full" disabled={submitting}>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={submitting}
+                    >
                       {submitting ? "Publishing..." : "Publish"}
                     </Button>
                     <Button
                       type="reset"
                       variant="outline"
                       className="w-full"
-                      onClick={() => setFormData({ title: "", content: "", category: "" })}
+                      onClick={() =>
+                        setFormData({ title: "", content: "", category: "", coverImage: null })
+                      }
                     >
                       Reset
                     </Button>
@@ -128,7 +175,7 @@ const Post = () => {
               </Card>
             </form>
 
-            <Card className="bg-teal-700 border-teal-700 text-white">
+            <Card className="bg-gradient-to-br from-slate-900 to-slate-700 border-0 text-white shadow-lg">
               <CardHeader>
                 <div className="flex justify-between text-sm text-white/80">
                   <span>{formData.title || "Title"}</span>
@@ -136,6 +183,14 @@ const Post = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                <p className="text-sm text-white/80 mb-2">Live preview</p>
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full h-40 object-cover rounded mb-3"
+                  />
+                ) : null}
                 <Textarea
                   readOnly
                   value={formData.content}
@@ -143,16 +198,17 @@ const Post = () => {
                   className="bg-white text-black h-40 resize-none"
                 />
                 <div className="flex justify-between text-white/80 text-sm mt-4">
-                  <Badge variant="secondary">{formData.category?.toUpperCase() || "CATEGORY"}</Badge>
+                  <Badge variant="secondary">
+                    {formData.category?.toUpperCase() || "CATEGORY"}
+                  </Badge>
                   <span>- {username?.toUpperCase()}</span>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </>
+        </div>
       )}
 
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

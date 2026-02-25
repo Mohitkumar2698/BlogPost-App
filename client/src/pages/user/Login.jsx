@@ -1,11 +1,11 @@
 import React, { useContext, useState } from "react";
 import { UserContext } from "../../context/UserState";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { alertError, alertSuccess } from "../../utils/alerts";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import Input from "../../components/ui/input";
 import Button from "../../components/ui/button";
+import { saveSession } from "../../utils/session";
 
 const Login = () => {
   const { loginUser } = useContext(UserContext);
@@ -27,21 +27,20 @@ const Login = () => {
     setSubmitting(true);
     const res = await loginUser(formData);
     if (res.success) {
-      toast.success("Login successful!");
-      localStorage.setItem("username", res.user.username);
-      localStorage.setItem("role", res.user.role);
+      alertSuccess("Login successful!");
+      saveSession({ user: res.user, token: res.token });
 
       if (res.user.role === "admin")
         setTimeout(() => navigate(`/admin/${res.user._id}`), 1000);
       else setTimeout(() => navigate(`/`), 1000);
     } else {
-      toast.error(res.message || "Login failed!");
+      alertError(res.message || "Login failed!");
     }
     setSubmitting(false);
   };
 
   return (
-    <div className="min-h-125 bg-gray-100 flex justify-center items-center px-4">
+    <div className="min-h-[80vh] bg-gradient-to-b from-cyan-50 via-white to-emerald-50 flex justify-center items-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-3xl text-center">Log In</CardTitle>
@@ -83,11 +82,9 @@ const Login = () => {
             </Button>
           </form>
         </CardContent>
-      </Card>
-
-      <ToastContainer position="top-right" autoClose={3000} />
-    </div>
+      </Card>    </div>
   );
 };
 
 export default Login;
+

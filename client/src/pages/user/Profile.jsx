@@ -1,46 +1,55 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../context/UserState";
 import { FaSpinner } from "react-icons/fa";
-import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { alertError, alertSuccess } from "../../utils/alerts";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import Input from "../../components/ui/input";
 import Alert from "../../components/ui/alert";
 import Badge from "../../components/ui/badge";
+import api from "../../utils/api";
 
 const Profile = () => {
   const { getUser } = useContext(UserContext);
   const [error, setError] = useState(null);
   const username = localStorage.getItem("username");
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
 
   const handlePic = async (e) => {
     const profilePic = e.target.files[0];
     if (!profilePic) return;
     if (profilePic.size > 200000) {
-      toast.error("File is too big");
+      alertError("File is too big");
     } else {
       try {
-        const apiResponse = await axios.patch(
-          `http://localhost:4000/api/v1/profile/edit/${username}`,
-          { profilePic },
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        toast.success(apiResponse.data.message);
-        navigate(0);
+        const formData = new FormData();
+        formData.append("profilePic", profilePic);
+        const apiResponse = await api.patch(`/profile/edit/${username}`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        alertSuccess(apiResponse.data.message);
+        const refreshed = await getUser(username);
+        if (typeof refreshed === "string") {
+          alertError(refreshed);
+          return;
+        }
+        if (refreshed?.profilePic) {
+          localStorage.setItem("profilePic", refreshed.profilePic);
+        }
+        setUser(refreshed);
       } catch {
-        toast.error("Unable to update profile picture.");
+        alertError("Unable to update profile picture.");
       }
     }
   };
 
   useEffect(() => {
+    if (!username) {
+      setError("Please login to view your profile.");
+      return;
+    }
+
     const fetchUser = async () => {
       const apiData = await getUser(username);
       if (typeof apiData === "string") {
@@ -55,7 +64,7 @@ const Profile = () => {
     fetchUser();
   }, [getUser, username]);
   return (
-    <div className="bg-gray-100 min-h-125 flex justify-center items-center py-10 px-4">
+    <div className="bg-gradient-to-b from-slate-50 via-white to-cyan-50 min-h-[80vh] py-10 px-4">
       {error ? (
         <div className="w-full max-w-xl">
           <Alert variant="error" title="Profile unavailable">
@@ -67,15 +76,16 @@ const Profile = () => {
           <FaSpinner className="animate-spin text-5xl text-teal-700" />
         </div>
       ) : (
-        <Card className="w-full max-w-3xl">
+        <Card className="w-full max-w-4xl mx-auto border-slate-200 shadow-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl">Profile</CardTitle>
+            <CardTitle className="text-4xl font-black tracking-tight">Profile</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col justify-center items-center gap-8">
             <div className="h-28 w-28 md:h-32 md:w-32 text-white rounded-full flex items-center justify-center text-5xl font-bold bg-teal-700 overflow-hidden">
             {user.profilePic ? (
               <img
                 src={user.profilePic}
+                alt={user.username}
                 className="h-full w-full rounded-full"
               />
             ) : (
@@ -125,13 +135,12 @@ const Profile = () => {
                 />
               </p>
             </div>
-            <Badge variant="secondary">Signed in as {user.username}</Badge>
+            <Badge variant="secondary">Signed in as @{user.username}</Badge>
           </CardContent>
         </Card>
-      )}
-      <ToastContainer autoClose={3000} />
-    </div>
+      )}    </div>
   );
 };
 
 export default Profile;
+

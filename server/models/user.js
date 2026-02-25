@@ -23,6 +23,40 @@ const UserSchema = new Schema({
   profilePic: {
     type: String,
   },
+  bio: {
+    type: String,
+    default: "",
+  },
+  followers: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  following: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  bookmarks: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Blog",
+    },
+  ],
+  blockedUsers: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  mutedUsers: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
 });
 
 export const User = model("User", UserSchema);
