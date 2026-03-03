@@ -44,7 +44,19 @@ server.use((err, _req, res, _next) => {
   });
 });
 
-server.listen(Port, () => {
-  connectDB();
-  console.log(`Server is Running on ${Port}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    console.log("MongoDB Connected");
+
+    server.listen(Port, () => {
+      console.log(`Server is Running on ${Port}`);
+    });
+
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
